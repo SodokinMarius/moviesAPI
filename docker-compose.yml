@@ -1,0 +1,31 @@
+  
+version: '3.3'
+services:
+  movies:
+    build: .    #soit lui indiquer le chemin du projet
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./:/usr/src/drf_learningProject/  #./scheminApp avant les 2 points  si docker-compose n'est pas dans le même dossier
+    ports:
+      - 8009:8000
+    env_file:
+      - ./.env.dev  #renseigner le chemin du .env.dev
+     
+
+    #Adding new services for postgres configuration
+    depends_on:
+      - movies-db
+  movies-db:   #<--- nom du service
+    image: postgres:14-alpine
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=movies
+      - POSTGRES_PASSWORD=movies
+      - POSTGRES_DB=movies_dev
+volumes:
+  postgres_data:
+
+
+ 

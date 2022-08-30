@@ -1,20 +1,27 @@
-
+import os
 from pathlib import Path
+import dj_database_url
 
+import django_heroku 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-g7t)i58=r&fq6(c*ua-q@lggd!efiq!(0q**ureydbk%)ngm)%"
+#SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = os.environ.get("SECRET_KEY")
+
+#SECRET_KEY = "django-insecure-g7t)i58=r&fq6(c*ua-q@lggd!efiq!(0q**ureydbk%)ngm)%"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+#DEBUG = True
+DEBUG = int(os.environ.get("DEBUG", default=0))
 
-ALLOWED_HOSTS = []
+#ALLOWED_HOSTS = []
+#ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(' ')
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+
 
 
 # Application definition
@@ -28,6 +35,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "movies",
     "rest_framework",
+    "pytest"
 ]
 
 MIDDLEWARE = [
@@ -66,10 +74,20 @@ WSGI_APPLICATION = "drf_learningProject.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": os.environ.get("SQL_ENGINE", "django.db.backends.sqlite3"),
+        "NAME": os.environ.get("SQL_DATABASE", os.path.join(BASE_DIR,"db.sqlite3")),
+        "USER":os.environ.get("SQL_USER","user"),
+        "PASSWORD":os.environ.get("SQL_PASSWORD","password"),
+        "HOST":os.environ.get("SQL_HOST","localhost"),
+        "POST":os.environ.get("SQL_PORT","5432"),
+        'ATOMIC_REQUESTS': True,
     }
 }
+
+#Configuration Heroku
+DATABASE_URL=os.environ.get("DATABASE_URL")
+db_from_env=dj_database_url.config(default=DATABASE_URL,conn_max_age=500)
+DATABASES["default"].update(db_from_env)
 
 
 # Password validation
@@ -114,3 +132,14 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL='movies.CustomUser'
+
+#Desable browsable APPI in production
+if not DEBUG:
+    REST_FRAMEWORK = {
+        "DEFAULT_RENDERER_CLASSES": (
+            "rest_framework.renderers.JSONRenderer",
+        )
+    }
+
+django_heroku.settings(locals())
+
